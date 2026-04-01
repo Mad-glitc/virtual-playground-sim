@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Cpu } from 'lucide-react';
+import { Cpu, Home } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
@@ -18,9 +18,10 @@ const Header = ({ activeTab, onTabChange }: HeaderProps) => {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <motion.div
-            className="flex items-center gap-3"
+            className="flex items-center gap-3 cursor-pointer"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
+            onClick={() => onTabChange('home')}
           >
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center glow-primary">
               <Cpu className="w-5 h-5 text-primary" />
