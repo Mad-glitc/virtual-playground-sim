@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Cpu } from 'lucide-react';
+import { Cpu, Home } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
