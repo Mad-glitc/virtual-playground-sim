@@ -1,16 +1,31 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Header from '@/components/Header';
+import HomePage from '@/components/HomePage';
+import LearnPage from '@/components/LearnPage';
 import PageReplacementSim from '@/components/PageReplacementSim';
 import SegmentationSim from '@/components/SegmentationSim';
 import VirtualMemorySim from '@/components/VirtualMemorySim';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('paging');
+  const [activeTab, setActiveTab] = useState('home');
+
+  const handleNavigate = (tab: string) => {
+    setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  if (activeTab === 'home') {
+    return <HomePage onNavigate={handleNavigate} />;
+  }
+
+  if (activeTab === 'learn') {
+    return <LearnPage onBack={() => handleNavigate('home')} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} />
+      <Header activeTab={activeTab} onTabChange={handleNavigate} />
       <main className="max-w-7xl mx-auto px-6 py-8">
         <AnimatePresence mode="wait">
           <motion.div
