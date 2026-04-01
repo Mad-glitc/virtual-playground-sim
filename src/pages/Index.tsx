@@ -1,16 +1,33 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import Header from '@/components/Header';
+import PageReplacementSim from '@/components/PageReplacementSim';
+import SegmentationSim from '@/components/SegmentationSim';
+import VirtualMemorySim from '@/components/VirtualMemorySim';
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const [activeTab, setActiveTab] = useState('paging');
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen bg-background">
+      <Header activeTab={activeTab} onTabChange={setActiveTab} />
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.2 }}
+          >
+            {activeTab === 'paging' && <PageReplacementSim />}
+            {activeTab === 'segmentation' && <SegmentationSim />}
+            {activeTab === 'virtual' && <VirtualMemorySim />}
+          </motion.div>
+        </AnimatePresence>
+      </main>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
