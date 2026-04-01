@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HardDrive, MemoryStick, ArrowRight, Plus, Play, RotateCcw } from 'lucide-react';
+import { HardDrive, MemoryStick, Plus, Play, RotateCcw, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,7 +46,6 @@ const VirtualMemorySim = () => {
 
   const accessPage = (pageId: number) => {
     if (pageId < 0 || pageId >= totalPages) return;
-
     const newPages = [...pages];
     const step = stepCount + 1;
     setStepCount(step);
@@ -59,12 +58,10 @@ const VirtualMemorySim = () => {
       return;
     }
 
-    // Page fault
     const inMemoryPages = newPages.filter((p) => p.inMemory);
     let swappedOut: number | null = null;
 
     if (inMemoryPages.length >= physicalFrames) {
-      // FIFO-like: swap out first loaded
       const victim = inMemoryPages[0];
       swappedOut = victim.id;
       const freedFrame = victim.frameIndex;
@@ -87,8 +84,8 @@ const VirtualMemorySim = () => {
         type: 'fault',
         swappedOut,
         message: swappedOut !== null
-          ? `Page ${pageId} → FAULT (swapped out Page ${swappedOut}, loaded to Frame ${page.frameIndex})`
-          : `Page ${pageId} → FAULT (loaded to Frame ${page.frameIndex})`,
+          ? `Page ${pageId} → FAULT (swapped out P${swappedOut} → Frame ${page.frameIndex})`
+          : `Page ${pageId} → FAULT (loaded → Frame ${page.frameIndex})`,
       },
     ]);
   };
@@ -106,56 +103,41 @@ const VirtualMemorySim = () => {
     setStepCount(0);
   };
 
+  const faults = logs.filter((l) => l.type === 'fault').length;
+  const hits = logs.filter((l) => l.type === 'hit').length;
+
   return (
     <div className="space-y-6">
       <motion.div
-        className="bg-card border border-border rounded-xl p-6 space-y-4"
+        className="glass rounded-2xl p-6 space-y-5 border-glow"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-          <MemoryStick className="w-4 h-4 text-primary" />
+        <h2 className="text-base font-semibold text-foreground flex items-center gap-2 font-display">
+          <div className="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center">
+            <MemoryStick className="w-4 h-4 text-info" />
+          </div>
           Virtual Memory Setup
         </h2>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs font-mono uppercase tracking-wider">
-              Virtual Pages
-            </Label>
-            <Input
-              type="number"
-              min={1}
-              max={16}
-              value={totalPages}
-              onChange={(e) => setTotalPages(Number(e.target.value))}
-              className="bg-muted border-border font-mono text-sm"
-              disabled={initialized}
-            />
+            <Label className="text-muted-foreground text-[10px] font-mono uppercase tracking-[0.2em]">Virtual Pages</Label>
+            <Input type="number" min={1} max={16} value={totalPages} onChange={(e) => setTotalPages(Number(e.target.value))} className="glass border-border/30 font-mono text-sm h-11" disabled={initialized} />
           </div>
           <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs font-mono uppercase tracking-wider">
-              Physical Frames
-            </Label>
-            <Input
-              type="number"
-              min={1}
-              max={8}
-              value={physicalFrames}
-              onChange={(e) => setPhysicalFrames(Number(e.target.value))}
-              className="bg-muted border-border font-mono text-sm"
-              disabled={initialized}
-            />
+            <Label className="text-muted-foreground text-[10px] font-mono uppercase tracking-[0.2em]">Physical Frames</Label>
+            <Input type="number" min={1} max={8} value={physicalFrames} onChange={(e) => setPhysicalFrames(Number(e.target.value))} className="glass border-border/30 font-mono text-sm h-11" disabled={initialized} />
           </div>
         </div>
 
         <div className="flex gap-2">
           {!initialized ? (
-            <Button onClick={initialize} className="gap-2">
+            <Button onClick={initialize} className="gap-2 glow-primary">
               <Play className="w-4 h-4" /> Initialize
             </Button>
           ) : (
-            <Button onClick={reset} variant="outline" className="gap-2">
+            <Button onClick={reset} variant="outline" className="gap-2 glass">
               <RotateCcw className="w-4 h-4" /> Reset
             </Button>
           )}
@@ -170,9 +152,29 @@ const VirtualMemorySim = () => {
             exit={{ opacity: 0 }}
             className="space-y-6"
           >
+            {/* Stats bar */}
+            {logs.length > 0 && (
+              <motion.div
+                className="grid grid-cols-3 gap-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                {[
+                  { label: 'Accesses', value: logs.length, color: 'text-foreground' },
+                  { label: 'Faults', value: faults, color: 'text-destructive' },
+                  { label: 'Hits', value: hits, color: 'text-success' },
+                ].map((s) => (
+                  <div key={s.label} className="glass rounded-xl p-4 border-glow text-center">
+                    <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{s.label}</p>
+                    <p className={`text-2xl font-bold font-mono mt-1 ${s.color}`}>{s.value}</p>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+
             {/* Access Input */}
-            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-              <h3 className="text-sm font-mono text-muted-foreground uppercase tracking-wider">
+            <div className="glass rounded-2xl p-6 space-y-4 border-glow">
+              <h3 className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em]">
                 Access Pages
               </h3>
               <div className="flex gap-3">
@@ -180,26 +182,28 @@ const VirtualMemorySim = () => {
                   value={accessInput}
                   onChange={(e) => setAccessInput(e.target.value)}
                   placeholder="e.g. 0 2 4 1 3"
-                  className="bg-muted border-border font-mono text-sm flex-1"
+                  className="glass border-border/30 font-mono text-sm flex-1 h-11"
                   onKeyDown={(e) => e.key === 'Enter' && handleAccessSubmit()}
                 />
-                <Button onClick={handleAccessSubmit} className="gap-2">
+                <Button onClick={handleAccessSubmit} className="gap-2 h-11 glow-primary">
                   <Plus className="w-4 h-4" /> Access
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {Array.from({ length: totalPages }, (_, i) => (
-                  <button
+                  <motion.button
                     key={i}
                     onClick={() => accessPage(i)}
-                    className={`w-10 h-10 rounded-lg font-mono text-sm font-medium transition-all ${
+                    className={`w-11 h-11 rounded-xl font-mono text-sm font-semibold transition-all ${
                       pages[i]?.inMemory
-                        ? 'bg-primary/20 text-primary border border-primary/40'
-                        : 'bg-muted text-muted-foreground border border-border hover:border-primary/30'
+                        ? 'bg-primary/15 text-primary border border-primary/30 glow-primary'
+                        : 'glass text-muted-foreground border border-border/30 hover:border-primary/30 hover:text-foreground'
                     }`}
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
                   >
                     {i}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -207,34 +211,52 @@ const VirtualMemorySim = () => {
             {/* Visualization */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Virtual Memory */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <h3 className="text-sm font-mono text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <HardDrive className="w-4 h-4" /> Virtual Pages
+              <div className="glass rounded-2xl p-6 border-glow">
+                <h3 className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                  <HardDrive className="w-3.5 h-3.5" /> Virtual Pages (Disk)
                 </h3>
                 <div className="grid grid-cols-4 gap-2">
                   {pages.map((p) => (
                     <motion.div
                       key={p.id}
-                      className={`relative rounded-lg p-3 text-center font-mono text-sm border transition-colors ${
+                      className={`relative rounded-xl p-3 text-center font-mono text-sm border transition-all ${
                         p.inMemory
-                          ? 'bg-primary/10 border-primary/40 text-primary'
-                          : 'bg-muted/50 border-border text-muted-foreground'
+                          ? 'bg-primary/8 border-primary/30 text-primary'
+                          : 'bg-muted/20 border-border/30 text-muted-foreground'
                       }`}
                       layout
+                      whileHover={{ scale: 1.05 }}
                     >
-                      <div className="font-bold">P{p.id}</div>
-                      <div className="text-[10px] mt-1">
-                        {p.inMemory ? `F${p.frameIndex}` : 'Disk'}
+                      <div className="font-bold text-base">P{p.id}</div>
+                      <div className="text-[10px] mt-1 opacity-70">
+                        {p.inMemory ? (
+                          <motion.span
+                            key={`mem-${p.frameIndex}`}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-primary"
+                          >
+                            F{p.frameIndex}
+                          </motion.span>
+                        ) : 'Disk'}
                       </div>
+                      {p.inMemory && (
+                        <motion.div
+                          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          layoutId={`indicator-${p.id}`}
+                        />
+                      )}
                     </motion.div>
                   ))}
                 </div>
               </div>
 
               {/* Physical Memory */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <h3 className="text-sm font-mono text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <MemoryStick className="w-4 h-4" /> Physical Frames
+              <div className="glass rounded-2xl p-6 border-glow">
+                <h3 className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                  <MemoryStick className="w-3.5 h-3.5" /> Physical Frames (RAM)
                 </h3>
                 <div className="space-y-2">
                   {Array.from({ length: physicalFrames }, (_, fIdx) => {
@@ -242,17 +264,27 @@ const VirtualMemorySim = () => {
                     return (
                       <motion.div
                         key={fIdx}
-                        className={`rounded-lg p-3 font-mono text-sm border flex items-center justify-between ${
+                        className={`rounded-xl p-3.5 font-mono text-sm border flex items-center justify-between ${
                           page
-                            ? 'bg-primary/10 border-primary/40'
-                            : 'bg-muted/30 border-border border-dashed'
+                            ? 'bg-primary/8 border-primary/30'
+                            : 'bg-muted/10 border-border/20 border-dashed'
                         }`}
                         layout
+                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                       >
-                        <span className="text-muted-foreground">Frame {fIdx}</span>
-                        <span className={page ? 'text-primary font-bold' : 'text-muted-foreground'}>
-                          {page ? `Page ${page.id}` : 'Empty'}
-                        </span>
+                        <span className="text-muted-foreground text-xs">Frame {fIdx}</span>
+                        <AnimatePresence mode="wait">
+                          <motion.span
+                            key={page ? page.id : 'empty'}
+                            className={page ? 'text-primary font-bold' : 'text-muted-foreground/40'}
+                            initial={{ opacity: 0, y: -10, rotateX: -90 }}
+                            animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                            exit={{ opacity: 0, y: 10, rotateX: 90 }}
+                            transition={{ type: 'spring', stiffness: 200 }}
+                          >
+                            {page ? `Page ${page.id}` : 'Empty'}
+                          </motion.span>
+                        </AnimatePresence>
                       </motion.div>
                     );
                   })}
@@ -262,22 +294,28 @@ const VirtualMemorySim = () => {
 
             {/* Access Log */}
             {logs.length > 0 && (
-              <div className="bg-card border border-border rounded-xl p-6">
-                <h3 className="text-sm font-mono text-muted-foreground uppercase tracking-wider mb-4">
+              <div className="glass rounded-2xl p-6 border-glow">
+                <h3 className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em] mb-4">
                   Access Log
                 </h3>
-                <div className="space-y-1 max-h-60 overflow-y-auto">
-                  {logs.map((log, i) => (
+                <div className="space-y-1.5 max-h-60 overflow-y-auto pr-2">
+                  {[...logs].reverse().map((log, i) => (
                     <motion.div
-                      key={i}
-                      className={`text-xs font-mono px-3 py-2 rounded-md ${
-                        log.type === 'fault' ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'
+                      key={logs.length - 1 - i}
+                      className={`text-xs font-mono px-4 py-2.5 rounded-lg flex items-center gap-2 ${
+                        log.type === 'fault'
+                          ? 'bg-destructive/5 text-destructive border border-destructive/10'
+                          : 'bg-success/5 text-success border border-success/10'
                       }`}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      initial={{ opacity: 0, x: -20, height: 0 }}
+                      animate={{ opacity: 1, x: 0, height: 'auto' }}
+                      transition={{ duration: 0.3 }}
                     >
-                      <span className="text-muted-foreground mr-2">[{log.step}]</span>
-                      {log.message}
+                      <span className="text-muted-foreground/50 w-8">[{log.step}]</span>
+                      <span className={`w-12 font-bold ${log.type === 'fault' ? 'text-destructive' : 'text-success'}`}>
+                        {log.type === 'fault' ? 'FAULT' : 'HIT'}
+                      </span>
+                      <span className="text-muted-foreground">{log.message}</span>
                     </motion.div>
                   ))}
                 </div>
