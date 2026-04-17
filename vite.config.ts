@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  // http:ver
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
