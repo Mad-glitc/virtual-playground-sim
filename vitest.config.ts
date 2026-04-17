@@ -10,6 +10,7 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
   },
+  // error:try
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
   },
