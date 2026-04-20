@@ -16,6 +16,7 @@ export default tseslint.config(
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
+      // teslint react from vars
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
